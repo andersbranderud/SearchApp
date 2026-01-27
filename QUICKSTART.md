@@ -11,7 +11,8 @@ Open a PowerShell terminal:
 cd c:\code\SearchApp\SearchApi
 dotnet run
 ```
-✅ API will start on `http://localhost:5000`
+✅ API will start on `http://localhost:5000`  
+✅ **Database (`searchapp.db`) will be automatically created on first run**
 
 ## Step 2: Start Frontend
 Open a **new** PowerShell terminal:

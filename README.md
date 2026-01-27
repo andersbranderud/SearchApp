@@ -79,7 +79,9 @@ A secure, full-stack search application that performs multi-word searches across
    dotnet restore
    dotnet run
    ```
-   Backend will start on `http://localhost:5000`
+   - Backend will start on `http://localhost:5000`
+   - **Database will be automatically created** (`searchapp.db`) on first run
+   - No manual database setup required!
 
 4. **Run Frontend** (in new terminal)
    ```bash
