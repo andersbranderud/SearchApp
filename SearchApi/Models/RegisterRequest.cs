@@ -17,21 +17,4 @@ namespace SearchApi.Models
         [StringLength(100, MinimumLength = 6)]
         public string Password { get; set; } = string.Empty;
     }
-
-    public class LoginRequest
-    {
-        [Required]
-        [StringLength(200)]
-        public string EmailOrUsername { get; set; } = string.Empty;
-
-        [Required]
-        public string Password { get; set; } = string.Empty;
-    }
-
-    public class AuthResponse
-    {
-        public string Token { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-    }
 }
