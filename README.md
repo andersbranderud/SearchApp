@@ -62,39 +62,101 @@ A secure, full-stack search application that performs multi-word searches across
    cd SearchApp
    ```
 
-2. **Configure API Key**
-   - Create `SearchApi/appsettings.Development.json`
-   - Add your SerpAPI key:
+2. **Get Your SerpAPI Key (Required)**
+   
+   SerpAPI provides search engine results. Free tier includes 100 searches/month.
+   
+   **Step-by-step:**
+   - Go to [https://serpapi.com/](https://serpapi.com/)
+   - Click "Register" (top right)
+   - Sign up with email or Google account
+   - After login, go to [https://serpapi.com/manage-api-key](https://serpapi.com/manage-api-key)
+   - Copy your API key (looks like: `a1b2c3d4e5f6...`)
+   - Keep this key - you'll need it in the next step!
+
+3. **Configure Your API Key**
+   
+   You need to create a configuration file with your API key.
+   
+   **Windows (PowerShell):**
+   ```powershell
+   cd SearchApi
+   New-Item -Path "appsettings.Development.json" -ItemType File
+   ```
+   
+   **macOS/Linux (Terminal):**
+   ```bash
+   cd SearchApi
+   touch appsettings.Development.json
+   ```
+   
+   **Then open the file** in any text editor and paste this:
    ```json
    {
      "SerpApi": {
-       "ApiKey": "YOUR_SERPAPI_KEY_HERE"
+       "ApiKey": "PASTE_YOUR_API_KEY_HERE"
      }
    }
    ```
+   
+   Replace `PASTE_YOUR_API_KEY_HERE` with your actual key from step 2.
+   
+   **Example:**
+   ```json
+   {
+     "SerpApi": {
+       "ApiKey": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+     }
+   }
+   ```
+   
+   ⚠️ **Important:** This file is git-ignored and won't be uploaded to GitHub.
 
-3. **Run Backend**
+4. **Run Backend API**
+   
+   Open a terminal/command prompt:
    ```bash
    cd SearchApi
    dotnet restore
    dotnet run
    ```
-   - Backend will start on `http://localhost:5000`
-   - **Database will be automatically created** (`searchapp.db`) on first run
-   - No manual database setup required!
+   
+   **You should see:**
+   ```
+   Building...
+   info: Microsoft.Hosting.Lifetime[14]
+         Now listening on: http://localhost:5000
+   ```
+   
+   ✅ Backend is running on `http://localhost:5000`  
+   ✅ **Database (`searchapp.db`) will be automatically created on first run**  
+   ✅ Keep this terminal window open!
 
-4. **Run Frontend** (in new terminal)
+5. **Run Frontend** (Open a NEW terminal)
+   
    ```bash
    cd SearchAppClient
    npm install
    npm start
    ```
-   Frontend will open at `http://localhost:3000`
+   
+   **First time only:** `npm install` will take 1-2 minutes to download dependencies.
+   
+   ✅ Browser will automatically open at `http://localhost:3000`  
+   ✅ Keep this terminal window open too!
 
-5. **Register/Login**
-   - Navigate to `http://localhost:3000`
-   - Create an account or login
-   - Start searching!
+6. **Create Your Account & Start Searching!**
+   
+   - Click "Register here" on the login page
+   - Fill in:
+     - **Username:** 3+ characters (letters, numbers, underscore)
+     - **Email:** Valid email format
+     - **Password:** 6+ characters (must include letters AND numbers)
+   - Click "Register"
+   - You'll be automatically logged in!
+   - Enter a search query (e.g., "artificial intelligence")
+   - Select search engines (all selected by default)
+   - Click "Search" and watch the results!
 
 ## Testing
 
