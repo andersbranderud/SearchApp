@@ -1,89 +1,13 @@
 using System.Text.RegularExpressions;
-using System.Web;
 
 namespace SearchApi.Validators
 {
-    public class InputValidator : IInputValidator
+    /// <summary>
+    /// Validator for user-related inputs (username, email, password)
+    /// Used for authentication and registration
+    /// </summary>
+    public class UserValidator : IUserValidator, IInputValidator
     {
-        private static readonly string[] AllowedSearchEngines = { 
-            "google", "bing", "yahoo", "duckduckgo", "baidu", "yandex" 
-        };
-        
-        // SQL Injection patterns to detect and block
-        private static readonly string[] SqlInjectionPatterns = 
-        {
-            @"(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|UNION|DECLARE|CAST)\b)",
-            @"(--|;|\/\*|\*\/|xp_|sp_)",
-            @"('(\s|%20)*(or|OR)(\s|%20)*')",
-            @"(\bor\b.*=.*)",
-        };
-
-        public ValidationResult ValidateSearchQuery(string query)
-        {
-            // Check if empty or null
-            if (string.IsNullOrWhiteSpace(query))
-            {
-                return ValidationResult.Failure("Search query cannot be empty.");
-            }
-
-            // Length validation
-            if (query.Length > 500)
-            {
-                return ValidationResult.Failure("Search query is too long. Maximum 500 characters allowed.");
-            }
-
-            // Check for SQL injection patterns
-            foreach (var pattern in SqlInjectionPatterns)
-            {
-                if (Regex.IsMatch(query, pattern, RegexOptions.IgnoreCase))
-                {
-                    return ValidationResult.Failure("Invalid characters detected in search query.");
-                }
-            }
-
-            // Check for script tags and potential XSS
-            if (ContainsXssPatterns(query))
-            {
-                return ValidationResult.Failure("Invalid characters detected in search query.");
-            }
-
-            // Only allow alphanumeric characters, spaces, and common punctuation
-            if (!Regex.IsMatch(query, @"^[a-zA-Z0-9\s\.,!?'\-]+$"))
-            {
-                return ValidationResult.Failure("Search query contains invalid characters. Only letters, numbers, spaces, and basic punctuation are allowed.");
-            }
-
-            return ValidationResult.Success();
-        }
-
-        public ValidationResult ValidateSearchEngines(List<string> searchEngines)
-        {
-            if (searchEngines == null || searchEngines.Count == 0)
-            {
-                return ValidationResult.Failure("At least one search engine must be selected.");
-            }
-
-            if (searchEngines.Count > AllowedSearchEngines.Length)
-            {
-                return ValidationResult.Failure($"Too many search engines selected. Maximum {AllowedSearchEngines.Length} allowed.");
-            }
-
-            // Validate each search engine
-            foreach (var engine in searchEngines)
-            {
-                if (string.IsNullOrWhiteSpace(engine))
-                {
-                    return ValidationResult.Failure("Search engine name cannot be empty.");
-                }
-
-                if (!AllowedSearchEngines.Contains(engine.ToLower()))
-                {
-                    return ValidationResult.Failure($"Invalid search engine: {engine}. Allowed engines are: {string.Join(", ", AllowedSearchEngines)}");
-                }
-            }
-
-            return ValidationResult.Success();
-        }
 
         public ValidationResult ValidateUsername(string username)
         {
@@ -104,7 +28,7 @@ namespace SearchApi.Validators
             }
 
             // Check for XSS patterns
-            if (ContainsXssPatterns(username))
+            if (SecurityHelper.ContainsXssPatterns(username))
             {
                 return ValidationResult.Failure("Username contains invalid characters.");
             }
@@ -156,7 +80,7 @@ namespace SearchApi.Validators
             }
 
             // Check for XSS patterns
-            if (ContainsXssPatterns(email))
+            if (SecurityHelper.ContainsXssPatterns(email))
             {
                 return ValidationResult.Failure("Email contains invalid characters.");
             }
@@ -190,31 +114,24 @@ namespace SearchApi.Validators
             return ValidationResult.Success();
         }
 
-        private bool ContainsXssPatterns(string input)
+        #region Legacy IInputValidator Support (Deprecated)
+        
+        // These methods are kept for backward compatibility only
+        // They delegate to SearchValidator
+        private readonly ISearchValidator _searchValidator = new SearchValidator();
+        
+        [Obsolete("Use ISearchValidator.ValidateSearchQuery instead")]
+        public ValidationResult ValidateSearchQuery(string query)
         {
-            var xssPatterns = new[]
-            {
-                @"<script",
-                @"javascript:",
-                @"onerror",
-                @"onload",
-                @"onclick",
-                @"<iframe",
-                @"<embed",
-                @"<object",
-                @"eval\s*\(",
-                @"expression\s*\(",
-            };
-
-            foreach (var pattern in xssPatterns)
-            {
-                if (Regex.IsMatch(input, pattern, RegexOptions.IgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return _searchValidator.ValidateSearchQuery(query);
         }
+        
+        [Obsolete("Use ISearchValidator.ValidateSearchEngines instead")]
+        public ValidationResult ValidateSearchEngines(List<string> searchEngines)
+        {
+            return _searchValidator.ValidateSearchEngines(searchEngines);
+        }
+        
+        #endregion
     }
 }

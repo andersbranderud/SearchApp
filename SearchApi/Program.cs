@@ -68,7 +68,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IExternalSearchService, SerpApiService>();
 builder.Services.AddScoped<IAuthValidator, AuthValidator>();
 builder.Services.AddScoped<ISearchValidator, SearchValidator>();
-builder.Services.AddScoped<IInputValidator, InputValidator>(); // Keep for backward compatibility
+builder.Services.AddScoped<IUserValidator, UserValidator>();
+builder.Services.AddScoped<IInputValidator, UserValidator>(); // Legacy support - deprecated
 
 var app = builder.Build();
 

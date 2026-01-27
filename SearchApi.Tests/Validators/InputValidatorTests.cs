@@ -3,13 +3,17 @@ using Xunit;
 
 namespace SearchApi.Tests.Validators
 {
+    /// <summary>
+    /// Legacy tests - kept for backward compatibility verification
+    /// These tests ensure the deprecated IInputValidator interface still works
+    /// </summary>
     public class InputValidatorTests
     {
-        private readonly InputValidator _validator;
+        private readonly UserValidator _validator;
 
         public InputValidatorTests()
         {
-            _validator = new InputValidator();
+            _validator = new UserValidator();
         }
 
         [Fact]
