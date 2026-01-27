@@ -6,7 +6,7 @@ namespace SearchApi.Validators
     /// Validator for user-related inputs (username, email, password)
     /// Used for authentication and registration
     /// </summary>
-    public class UserValidator : IUserValidator, IInputValidator
+    public class UserValidator : IUserValidator
     {
 
         public ValidationResult ValidateUsername(string username)
@@ -113,25 +113,5 @@ namespace SearchApi.Validators
 
             return ValidationResult.Success();
         }
-
-        #region Legacy IInputValidator Support (Deprecated)
-        
-        // These methods are kept for backward compatibility only
-        // They delegate to SearchValidator
-        private readonly ISearchValidator _searchValidator = new SearchValidator();
-        
-        [Obsolete("Use ISearchValidator.ValidateSearchQuery instead")]
-        public ValidationResult ValidateSearchQuery(string query)
-        {
-            return _searchValidator.ValidateSearchQuery(query);
-        }
-        
-        [Obsolete("Use ISearchValidator.ValidateSearchEngines instead")]
-        public ValidationResult ValidateSearchEngines(List<string> searchEngines)
-        {
-            return _searchValidator.ValidateSearchEngines(searchEngines);
-        }
-        
-        #endregion
     }
 }

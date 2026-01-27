@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace SearchApi.Validators
 {
     /// <summary>
@@ -7,19 +5,6 @@ namespace SearchApi.Validators
     /// </summary>
     public interface IUserValidator
     {
-        ValidationResult ValidateUsername(string username);
-        ValidationResult ValidateEmail(string email);
-        ValidationResult ValidatePassword(string password);
-    }
-    
-    /// <summary>
-    /// Legacy interface for backward compatibility - DO NOT USE in new code
-    /// </summary>
-    [Obsolete("Use IUserValidator for user validation and ISearchValidator for search validation instead")]
-    public interface IInputValidator
-    {
-        ValidationResult ValidateSearchQuery(string query);
-        ValidationResult ValidateSearchEngines(List<string> searchEngines);
         ValidationResult ValidateUsername(string username);
         ValidationResult ValidateEmail(string email);
         ValidationResult ValidatePassword(string password);
