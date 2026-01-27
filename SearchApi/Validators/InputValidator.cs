@@ -63,9 +63,9 @@ namespace SearchApi.Validators
                 return ValidationResult.Failure("At least one search engine must be selected.");
             }
 
-            if (searchEngines.Count > 10)
+            if (searchEngines.Count > AllowedSearchEngines.Length)
             {
-                return ValidationResult.Failure("Too many search engines selected. Maximum 10 allowed.");
+                return ValidationResult.Failure($"Too many search engines selected. Maximum {AllowedSearchEngines.Length} allowed.");
             }
 
             // Validate each search engine

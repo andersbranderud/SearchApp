@@ -66,7 +66,9 @@ builder.Services.AddAntiforgery(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IExternalSearchService, SerpApiService>();
-builder.Services.AddScoped<IInputValidator, InputValidator>();
+builder.Services.AddScoped<IAuthValidator, AuthValidator>();
+builder.Services.AddScoped<ISearchValidator, SearchValidator>();
+builder.Services.AddScoped<IInputValidator, InputValidator>(); // Keep for backward compatibility
 
 var app = builder.Build();
 

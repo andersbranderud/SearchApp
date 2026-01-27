@@ -10,9 +10,9 @@ namespace SearchApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IInputValidator _validator;
+        private readonly IAuthValidator _validator;
 
-        public AuthController(IAuthService authService, IInputValidator validator)
+        public AuthController(IAuthService authService, IAuthValidator validator)
         {
             _authService = authService;
             _validator = validator;

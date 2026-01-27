@@ -12,9 +12,9 @@ namespace SearchApi.Controllers
     public class SearchController : ControllerBase
     {
         private readonly IExternalSearchService _externalSearchService;
-        private readonly IInputValidator _validator;
+        private readonly ISearchValidator _validator;
 
-        public SearchController(IExternalSearchService externalSearchService, IInputValidator validator)
+        public SearchController(IExternalSearchService externalSearchService, ISearchValidator validator)
         {
             _externalSearchService = externalSearchService;
             _validator = validator;
