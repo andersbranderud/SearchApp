@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { searchApi, authApi } from '../services/api';
 import { SearchResult } from '../types';
@@ -18,15 +18,7 @@ const SearchForm: React.FC = () => {
   const username = authApi.getUsername();
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (!authApi.isAuthenticated()) {
-      navigate('/login');
-      return;
-    }
-    loadAvailableEngines();
-  }, [navigate]);
-
-  const loadAvailableEngines = async (): Promise<void> => {
+  const loadAvailableEngines = useCallback(async (): Promise<void> => {
     try {
       const engines = await searchApi.getAvailableEngines();
       setAvailableEngines(engines);
@@ -41,7 +33,15 @@ const SearchForm: React.FC = () => {
         setError('Failed to load available search engines');
       }
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!authApi.isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
+    loadAvailableEngines();
+  }, [navigate, loadAvailableEngines]);
 
   const handleEngineToggle = (engine: string): void => {
     setSelectedEngines(prev => {
