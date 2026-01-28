@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import App from './App';
+import App, { AppContent } from './App';
 import { authApi } from './services/api';
 
 // Mock the services
@@ -62,7 +62,7 @@ describe('App Component', () => {
     it('should redirect to login page when accessing root path', () => {
       render(
         <MemoryRouter initialEntries={['/']}>
-          <App />
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('login-component')).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('App Component', () => {
     it('should render login page on /login route', () => {
       render(
         <MemoryRouter initialEntries={['/login']}>
-          <App />
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('login-component')).toBeInTheDocument();
@@ -80,7 +80,7 @@ describe('App Component', () => {
     it('should render register page on /register route', () => {
       render(
         <MemoryRouter initialEntries={['/register']}>
-          <App />
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('register-component')).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('App Component', () => {
     it('should redirect to login when accessing protected /search route', () => {
       render(
         <MemoryRouter initialEntries={['/search']}>
-          <App />
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('login-component')).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe('App Component', () => {
     it('should render search form when authenticated and accessing /search', () => {
       render(
         <MemoryRouter initialEntries={['/search']}>
-          <App />
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('search-form-component')).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe('App Component', () => {
     it('should still allow access to login page when authenticated', () => {
       render(
         <MemoryRouter initialEntries={['/login']}>
-          <App />
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('login-component')).toBeInTheDocument();
@@ -122,7 +122,7 @@ describe('App Component', () => {
     it('should still allow access to register page when authenticated', () => {
       render(
         <MemoryRouter initialEntries={['/register']}>
-          <App />
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('register-component')).toBeInTheDocument();
@@ -135,7 +135,7 @@ describe('App Component', () => {
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(false);
       const { rerender } = render(
         <MemoryRouter initialEntries={['/search']}>
-          <App />
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('login-component')).toBeInTheDocument();
@@ -145,7 +145,7 @@ describe('App Component', () => {
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(true);
       rerender(
         <MemoryRouter initialEntries={['/search']}>
-          <App />
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('search-form-component')).toBeInTheDocument();
@@ -157,7 +157,7 @@ describe('App Component', () => {
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(false);
       render(
         <MemoryRouter initialEntries={['/invalid-route']}>
-          <App />
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('login-component')).toBeInTheDocument();
