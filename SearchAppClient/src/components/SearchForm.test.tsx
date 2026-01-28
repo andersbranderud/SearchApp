@@ -39,14 +39,16 @@ jest.mock('./SearchResults', () => {
 // Helper function to render with Router and wait for initial load
 const renderWithRouter = async (component: React.ReactElement) => {
   const result = render(
-    <BrowserRouter future={{ v7_startTransition: true }}>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       {component}
     </BrowserRouter>
   );
-  // Wait for the initial loadAvailableEngines to complete
-  await waitFor(() => {
-    expect(searchApi.getAvailableEngines).toHaveBeenCalled();
-  });
+  // Only wait for getAvailableEngines if user is authenticated
+  if ((authApi.isAuthenticated as jest.Mock)()) {
+    await waitFor(() => {
+      expect(searchApi.getAvailableEngines).toHaveBeenCalled();
+    });
+  }
   return result;
 };
 
@@ -752,6 +754,8 @@ describe('SearchForm Component', () => {
         expect(screen.queryByTestId('loading-banner')).not.toBeInTheDocument();
       });
       
+      // Run all pending timers and switch back to real timers
+      jest.runOnlyPendingTimers();
       jest.useRealTimers();
     });
 

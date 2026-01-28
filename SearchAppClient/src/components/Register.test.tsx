@@ -21,7 +21,7 @@ jest.mock('../services/api', () => ({
 // Helper function to render with Router
 const renderWithRouter = (component: React.ReactElement) => {
   return render(
-    <BrowserRouter future={{ v7_startTransition: true }}>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       {component}
     </BrowserRouter>
   );
