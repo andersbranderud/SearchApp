@@ -89,7 +89,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd SearchAppClient
-        npm ci
+        npm install
         
     - name: Run tests
       run: |
