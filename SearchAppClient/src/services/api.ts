@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { SearchRequest, SearchResult, RegisterRequest, LoginRequest, AuthResponse } from '../types/search';
+import { SearchRequest, SearchResult, RegisterRequest, LoginRequest, AuthResponse } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 

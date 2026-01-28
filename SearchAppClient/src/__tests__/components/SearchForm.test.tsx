@@ -2,9 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import SearchForm from './SearchForm';
-import { searchApi, authApi } from '../services/api';
-import { SearchResult } from '../types/search';
+import SearchForm from '../../components/SearchForm';
+import { searchApi, authApi } from '../../services/api';
+import { SearchResult } from '../../types';
 
 // Mock the services and navigation
 const mockNavigate = jest.fn();
@@ -13,7 +13,7 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-jest.mock('../services/api', () => ({
+jest.mock('../../services/api', () => ({
   authApi: {
     isAuthenticated: jest.fn(),
     getUsername: jest.fn(),
@@ -26,7 +26,7 @@ jest.mock('../services/api', () => ({
 }));
 
 // Mock SearchResults component
-jest.mock('./SearchResults', () => {
+jest.mock('../../components/SearchResults', () => {
   return function MockSearchResults({ results }: any) {
     return (
       <div data-testid="search-results-component">

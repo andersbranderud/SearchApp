@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, within } from '@testing-library/react';
-import SearchResults from './SearchResults';
-import { SearchResult } from '../types/search';
+import SearchResults from '../../components/SearchResults';
+import { SearchResult } from '../../types';
 
 describe('SearchResults Component', () => {
   const mockResults: SearchResult = {

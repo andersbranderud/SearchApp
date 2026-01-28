@@ -2,8 +2,8 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import Register from './Register';
-import { authApi } from '../services/api';
+import Register from '../../components/Register';
+import { authApi } from '../../services/api';
 
 // Mock the services and navigation
 const mockNavigate = jest.fn();
@@ -12,7 +12,7 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-jest.mock('../services/api', () => ({
+jest.mock('../../services/api', () => ({
   authApi: {
     register: jest.fn(),
   },
