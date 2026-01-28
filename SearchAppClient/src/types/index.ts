@@ -1,5 +1,5 @@
-export { SearchRequest } from './SearchRequest';
-export { SearchResult } from './SearchResult';
-export { RegisterRequest } from './RegisterRequest';
-export { LoginRequest } from './LoginRequest';
-export { AuthResponse } from './AuthResponse';
+export type { SearchRequest } from './SearchRequest';
+export type { SearchResult } from './SearchResult';
+export type { RegisterRequest } from './RegisterRequest';
+export type { LoginRequest } from './LoginRequest';
+export type { AuthResponse } from './AuthResponse';
