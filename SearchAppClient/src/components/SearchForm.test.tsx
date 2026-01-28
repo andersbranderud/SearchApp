@@ -368,6 +368,11 @@ describe('SearchForm Component', () => {
       await waitFor(() => {
         expect(searchApi.search).toHaveBeenCalledWith('test query', ['Google', 'Bing']);
       });
+      
+      // Wait for results to be displayed
+      await waitFor(() => {
+        expect(screen.queryByTestId('search-results-component')).toBeInTheDocument();
+      });
     });
 
     it('should display search results on successful search', async () => {
@@ -552,6 +557,10 @@ describe('SearchForm Component', () => {
       await waitFor(() => {
         expect(screen.queryByTestId('loading-banner')).not.toBeInTheDocument();
       });
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('search-results-component')).toBeInTheDocument();
+      });
     });
 
     it('should disable search button while loading', async () => {
@@ -580,6 +589,10 @@ describe('SearchForm Component', () => {
         searchEngines: ['Google'],
         engineTotals: { Google: 1000 },
       });
+      
+      await waitFor(() => {
+        expect(searchButton).not.toBeDisabled();
+      });
     });
 
     it('should display word count in loading banner', async () => {
@@ -606,6 +619,10 @@ describe('SearchForm Component', () => {
         searchEngines: ['Google'],
         engineTotals: { Google: 1000 },
       });
+      
+      await waitFor(() => {
+        expect(screen.queryByTestId('loading-banner')).not.toBeInTheDocument();
+      });
     });
 
     it('should display engine count in loading banner', async () => {
@@ -631,6 +648,10 @@ describe('SearchForm Component', () => {
         query: 'test',
         searchEngines: ['Google', 'Bing', 'DuckDuckGo'],
         engineTotals: { Google: 1000, Bing: 500, DuckDuckGo: 300 },
+      });
+      
+      await waitFor(() => {
+        expect(screen.queryByTestId('loading-banner')).not.toBeInTheDocument();
       });
     });
   });
@@ -727,6 +748,10 @@ describe('SearchForm Component', () => {
         engineTotals: { Google: 1000 },
       });
       
+      await waitFor(() => {
+        expect(screen.queryByTestId('loading-banner')).not.toBeInTheDocument();
+      });
+      
       jest.useRealTimers();
     });
 
@@ -757,6 +782,10 @@ describe('SearchForm Component', () => {
         query: 'test',
         searchEngines: ['Google'],
         engineTotals: { Google: 1000 },
+      });
+      
+      await waitFor(() => {
+        expect(screen.queryByTestId('loading-banner')).not.toBeInTheDocument();
       });
     });
   });
