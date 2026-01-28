@@ -38,7 +38,11 @@ jest.mock('./SearchResults', () => {
 
 // Helper function to render with Router and wait for initial load
 const renderWithRouter = async (component: React.ReactElement) => {
-  const result = render(<BrowserRouter>{component}</BrowserRouter>);
+  const result = render(
+    <BrowserRouter future={{ v7_startTransition: true }}>
+      {component}
+    </BrowserRouter>
+  );
   // Wait for the initial loadAvailableEngines to complete
   await waitFor(() => {
     expect(searchApi.getAvailableEngines).toHaveBeenCalled();
