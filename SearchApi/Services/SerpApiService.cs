@@ -96,35 +96,21 @@ namespace SearchApi.Services
         {
             // Split query into individual words
             var words = query.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            
-            var engineTotals = new Dictionary<string, long>();
 
-            // Parallelize all API calls for better performance
-            var tasks = new List<Task<(string engine, long count)>>();
+            // Create tasks for all word-engine combinations in parallel (maximizes parallelism)
+            var allTasks = searchEngines
+                .SelectMany(engine => words.Select(word => 
+                    GetSearchResultCountAsync(word, engine)
+                        .ContinueWith(t => (engine, count: t.Result))))
+                .ToList();
 
-            foreach (var engine in searchEngines)
-            {
-                tasks.Add(Task.Run(async () =>
-                {
-                    long totalCount = 0;
+            // Wait for all tasks to complete
+            var results = await Task.WhenAll(allTasks);
 
-                    // Search all words in parallel for this engine
-                    var wordTasks = words.Select(word => GetSearchResultCountAsync(word, engine)).ToArray();
-                    var wordCounts = await Task.WhenAll(wordTasks);
-                    totalCount = wordCounts.Sum();
-
-                    return (engine, totalCount);
-                }));
-            }
-
-            // Wait for all engines to complete
-            var results = await Task.WhenAll(tasks);
-
-            // Build the result dictionary
-            foreach (var (engine, count) in results)
-            {
-                engineTotals[engine] = count;
-            }
+            // Group by engine and sum the counts
+            var engineTotals = results
+                .GroupBy(r => r.engine)
+                .ToDictionary(g => g.Key, g => g.Sum(r => r.count));
 
             return engineTotals;
         }
