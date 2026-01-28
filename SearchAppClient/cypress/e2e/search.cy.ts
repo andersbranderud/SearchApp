@@ -30,6 +30,9 @@ describe('Search App - Search Functionality (Mocked)', () => {
     const username = `searchtest_${Date.now()}`;
     const email = `search_${Date.now()}@example.com`;
     
+    // Setup mocks BEFORE visiting any page
+    cy.mockApiCalls();
+    
     cy.visit('/register');
     cy.get('#username').type(username);
     cy.get('#email').type(email);
@@ -40,8 +43,7 @@ describe('Search App - Search Functionality (Mocked)', () => {
     // Wait for redirect to search page
     cy.url().should('eq', Cypress.config().baseUrl + '/search');
     
-    // Now setup mocks for search functionality
-    cy.mockApiCalls();
+    // Wait for the engines to load
     cy.wait('@getEngines');
   });
 
