@@ -55,19 +55,23 @@ describe('SearchForm Component', () => {
   });
 
   describe('Authentication Check', () => {
-    it('should redirect to login if not authenticated', () => {
+    it('should redirect to login if not authenticated', async () => {
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(false);
       renderWithRouter(<SearchForm />);
       
-      expect(mockNavigate).toHaveBeenCalledWith('/login');
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/login');
+      });
     });
 
     it('should not redirect if authenticated', async () => {
       renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
-        expect(mockNavigate).not.toHaveBeenCalled();
+        expect(searchApi.getAvailableEngines).toHaveBeenCalled();
       });
+      
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
 
