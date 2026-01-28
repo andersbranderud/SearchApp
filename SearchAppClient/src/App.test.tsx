@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import App, { AppContent } from './App';
 import { authApi } from './services/api';
@@ -130,7 +130,7 @@ describe('App Component', () => {
   });
 
   describe('Protected Route Component', () => {
-    it('should protect routes correctly based on authentication state', () => {
+    it('should protect routes correctly based on authentication state', async () => {
       // First test - not authenticated
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(false);
       const { rerender } = render(
@@ -138,7 +138,10 @@ describe('App Component', () => {
           <AppContent />
         </MemoryRouter>
       );
-      expect(screen.getByTestId('login-component')).toBeInTheDocument();
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('login-component')).toBeInTheDocument();
+      });
       expect(screen.queryByTestId('search-form-component')).not.toBeInTheDocument();
 
       // Second test - authenticated
@@ -148,19 +151,25 @@ describe('App Component', () => {
           <AppContent />
         </MemoryRouter>
       );
-      expect(screen.getByTestId('search-form-component')).toBeInTheDocument();
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('search-form-component')).toBeInTheDocument();
+      });
     });
   });
 
   describe('Invalid Routes', () => {
-    it('should redirect to login for invalid routes when not authenticated', () => {
+    it('should redirect to login for invalid routes when not authenticated', async () => {
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(false);
       render(
         <MemoryRouter initialEntries={['/invalid-route']}>
           <AppContent />
         </MemoryRouter>
       );
-      expect(screen.getByTestId('login-component')).toBeInTheDocument();
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('login-component')).toBeInTheDocument();
+      });
     });
   });
 });
