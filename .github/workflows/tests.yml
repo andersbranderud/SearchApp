@@ -94,7 +94,7 @@ jobs:
     - name: Run tests
       run: |
         cd SearchAppClient
-        npm test -- --watchAll=false --coverage --maxWorkers=2
+        npm test -- --watchAll=false --coverage --maxWorkers=2 --verbose
       env:
         CI: true
         
