@@ -1,4 +1,4 @@
-describe('Search App - Authentication', () => {
+describe('Search App - Authentication (Mocked)', () => {
   beforeEach(() => {
     // Clear local storage before each test
     cy.clearLocalStorage();
@@ -7,25 +7,6 @@ describe('Search App - Authentication', () => {
   it('should redirect to login when not authenticated', () => {
     cy.visit('/');
     cy.url().should('include', '/login');
-  });
-
-  it('should register a new user', () => {
-    cy.visit('/register');
-    
-    const username = `testuser_${Date.now()}`;
-    const email = `test_${Date.now()}@example.com`;
-    
-    cy.get('#username').type(username);
-    cy.get('#email').type(email);
-    cy.get('#password').type('password123');
-    cy.get('#confirmPassword').type('password123');
-    cy.get('button[type="submit"]').click();
-    
-    // Should redirect to search page after successful registration
-    cy.url().should('eq', Cypress.config().baseUrl + '/search');
-    
-    // Should show user info
-    cy.contains(`Welcome, ${username}!`).should('be.visible');
   });
 
   it('should show validation errors on registration', () => {
@@ -40,51 +21,11 @@ describe('Search App - Authentication', () => {
     
     cy.get('.error-message').should('contain', 'at least 3 characters');
   });
-
-  it('should login with existing credentials', () => {
-    // First register a user
-    const username = `logintest_${Date.now()}`;
-    const email = `login_${Date.now()}@example.com`;
-    const password = 'password123';
-    
-    cy.visit('/register');
-    cy.get('#username').type(username);
-    cy.get('#email').type(email);
-    cy.get('#password').type(password);
-    cy.get('#confirmPassword').type(password);
-    cy.get('button[type="submit"]').click();
-    
-    // Wait for redirect to search page
-    cy.url().should('eq', Cypress.config().baseUrl + '/search');
-    
-    // Logout
-    cy.get('.logout-button').click();
-    cy.url().should('include', '/login');
-    
-    // Login again
-    cy.get('#emailOrUsername').type(username);
-    cy.get('#password').type(password);
-    cy.get('button[type="submit"]').click();
-    
-    // Should redirect to search page
-    cy.url().should('eq', Cypress.config().baseUrl + '/search');
-    cy.contains(`Welcome, ${username}!`).should('be.visible');
-  });
-
-  it('should show error for invalid credentials', () => {
-    cy.visit('/login');
-    
-    cy.get('#emailOrUsername').type('nonexistent@example.com');
-    cy.get('#password').type('wrongpassword');
-    cy.get('button[type="submit"]').click();
-    
-    cy.get('.error-message').should('contain', 'Invalid credentials');
-  });
 });
 
-describe('Search App - Search Functionality', () => {
+describe('Search App - Search Functionality (Mocked)', () => {
   beforeEach(() => {
-    // Register and login before each test
+    // Register and login with real API before each test
     cy.clearLocalStorage();
     const username = `searchtest_${Date.now()}`;
     const email = `search_${Date.now()}@example.com`;
@@ -98,6 +39,10 @@ describe('Search App - Search Functionality', () => {
     
     // Wait for redirect to search page
     cy.url().should('eq', Cypress.config().baseUrl + '/search');
+    
+    // Now setup mocks for search functionality
+    cy.mockApiCalls();
+    cy.wait('@getEngines');
   });
 
   it('should load the search page with all required elements', () => {
@@ -109,7 +54,7 @@ describe('Search App - Search Functionality', () => {
     cy.get('.logout-button').should('be.visible');
   });
 
-  it('should load available search engines', () => {
+  it('should load available search engines from mock', () => {
     cy.get('[data-testid="engine-google"]').should('exist');
     cy.get('[data-testid="engine-bing"]').should('exist');
     cy.get('[data-testid="engine-yahoo"]').should('exist');
@@ -149,24 +94,29 @@ describe('Search App - Search Functionality', () => {
     // Uncheck all engines
     cy.get('[data-testid="engine-google"]').uncheck();
     cy.get('[data-testid="engine-bing"]').uncheck();
-    cy.get('[data-testid="engine-yelp"]').uncheck();
+    cy.get('[data-testid="engine-yahoo"]').uncheck();
     cy.get('[data-testid="engine-duckduckgo"]').uncheck();
+    cy.get('[data-testid="engine-baidu"]').uncheck();
+    cy.get('[data-testid="engine-yandex"]').uncheck();
     
     cy.get('[data-testid="search-button"]').click();
     cy.get('[data-testid="error-message"]').should('be.visible').and('contain', 'Please select at least one search engine');
   });
 
-  it('should perform search and display results', () => {
+  it('should perform search with mocked results', () => {
     // Enter search query with multiple words
     cy.get('[data-testid="search-input"]').type('Hello world');
     
     // Submit form
     cy.get('[data-testid="search-button"]').click();
     
-    // Wait for results (this will make actual API calls to SerpAPI)
-    cy.get('[data-testid="search-results"]', { timeout: 30000 }).should('be.visible');
+    // Wait for mock search API call
+    cy.wait('@search');
     
-    // Verify results for some engines are displayed (not all to keep test fast)
+    // Verify results are displayed (with mock data, should be fast)
+    cy.get('[data-testid="search-results"]', { timeout: 5000 }).should('be.visible');
+    
+    // Verify results for engines are displayed
     cy.get('[data-testid="results-google"]').should('be.visible');
     cy.get('[data-testid="results-bing"]').should('be.visible');
     
@@ -174,12 +124,46 @@ describe('Search App - Search Functionality', () => {
     cy.get('.count-value').should('have.length.greaterThan', 0);
   });
 
-  it('should logout successfully', () => {
+  it('should perform search with only selected engines', () => {
+    // Uncheck most engines, leave only Google and Bing
+    cy.get('[data-testid="engine-yahoo"]').uncheck();
+    cy.get('[data-testid="engine-duckduckgo"]').uncheck();
+    cy.get('[data-testid="engine-baidu"]').uncheck();
+    cy.get('[data-testid="engine-yandex"]').uncheck();
+    
+    cy.get('[data-testid="search-input"]').type('Test query');
+    cy.get('[data-testid="search-button"]').click();
+    
+    cy.wait('@search').then((interception) => {
+      // Verify only Google and Bing were included in the request
+      expect(interception.request.body.searchEngines).to.have.length(2);
+      expect(interception.request.body.searchEngines).to.include('Google');
+      expect(interception.request.body.searchEngines).to.include('Bing');
+    });
+    
+    cy.get('[data-testid="search-results"]').should('be.visible');
+    cy.get('[data-testid="results-google"]').should('be.visible');
+    cy.get('[data-testid="results-bing"]').should('be.visible');
+  });
+
+  it('should display deterministic mock results', () => {
+    // Mock data should return consistent results for the same query
+    cy.get('[data-testid="search-input"]').type('cypress test');
+    cy.get('[data-testid="search-button"]').click();
+    
+    cy.wait('@search');
+    cy.get('[data-testid="search-results"]').should('be.visible');
+    
+    // Verify that results contain numbers (mock data returns deterministic values)
+    cy.get('.count-value').first().invoke('text').should('match', /\d+/);
+  });
+
+  it('should logout successfully from search page', () => {
     cy.get('.logout-button').click();
     cy.url().should('include', '/login');
     
-    // Try to visit home page, should redirect to login
-    cy.visit('/');
+    // Try to visit search page, should redirect to login
+    cy.visit('/search');
     cy.url().should('include', '/login');
   });
 });

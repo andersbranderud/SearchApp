@@ -65,7 +65,18 @@ builder.Services.AddAntiforgery(options =>
 // Register services
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IExternalSearchService, SerpApiService>();
+
+// Use mock search service in test environment, real service otherwise
+var useMockSearchService = builder.Configuration.GetValue<bool>("Testing:UseMockSearchService");
+if (useMockSearchService)
+{
+    builder.Services.AddScoped<IExternalSearchService, MockExternalSearchService>();
+}
+else
+{
+    builder.Services.AddScoped<IExternalSearchService, SerpApiService>();
+}
+
 builder.Services.AddScoped<IAuthValidator, AuthValidator>();
 builder.Services.AddScoped<ISearchValidator, SearchValidator>();
 builder.Services.AddScoped<IUserValidator, UserValidator>();
@@ -96,3 +107,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Make Program class visible to integration tests
+public partial class Program { }
