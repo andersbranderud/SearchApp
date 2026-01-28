@@ -130,10 +130,9 @@ describe('App Component', () => {
   });
 
   describe('Protected Route Component', () => {
-    it('should protect routes correctly based on authentication state', async () => {
-      // First test - not authenticated
+    it('should redirect to login when not authenticated accessing /search', async () => {
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(false);
-      const { rerender } = render(
+      render(
         <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/search']}>
           <AppContent />
         </MemoryRouter>
@@ -143,10 +142,11 @@ describe('App Component', () => {
         expect(screen.getByTestId('login-component')).toBeInTheDocument();
       });
       expect(screen.queryByTestId('search-form-component')).not.toBeInTheDocument();
+    });
 
-      // Second test - authenticated
+    it('should allow access to /search when authenticated', async () => {
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(true);
-      rerender(
+      render(
         <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/search']}>
           <AppContent />
         </MemoryRouter>
