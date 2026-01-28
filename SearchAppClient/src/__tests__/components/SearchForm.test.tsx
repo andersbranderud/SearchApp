@@ -2,9 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import SearchForm from './SearchForm';
-import { searchApi, authApi } from '../services/api';
-import { SearchResult } from '../types/search';
+import SearchForm from '../../components/SearchForm';
+import { searchApi, authApi } from '../../services/api';
+import { SearchResult } from '../../types';
 
 // Mock the services and navigation
 const mockNavigate = jest.fn();
@@ -13,7 +13,7 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-jest.mock('../services/api', () => ({
+jest.mock('../../services/api', () => ({
   authApi: {
     isAuthenticated: jest.fn(),
     getUsername: jest.fn(),
@@ -26,7 +26,7 @@ jest.mock('../services/api', () => ({
 }));
 
 // Mock SearchResults component
-jest.mock('./SearchResults', () => {
+jest.mock('../../components/SearchResults', () => {
   return function MockSearchResults({ results }: any) {
     return (
       <div data-testid="search-results-component">
@@ -36,9 +36,20 @@ jest.mock('./SearchResults', () => {
   };
 });
 
-// Helper function to render with Router
-const renderWithRouter = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
+// Helper function to render with Router and wait for initial load
+const renderWithRouter = async (component: React.ReactElement) => {
+  const result = render(
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      {component}
+    </BrowserRouter>
+  );
+  // Only wait for getAvailableEngines if user is authenticated
+  if ((authApi.isAuthenticated as jest.Mock)()) {
+    await waitFor(() => {
+      expect(searchApi.getAvailableEngines).toHaveBeenCalled();
+    });
+  }
+  return result;
 };
 
 describe('SearchForm Component', () => {
@@ -55,25 +66,29 @@ describe('SearchForm Component', () => {
   });
 
   describe('Authentication Check', () => {
-    it('should redirect to login if not authenticated', () => {
+    it('should redirect to login if not authenticated', async () => {
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(false);
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
-      expect(mockNavigate).toHaveBeenCalledWith('/login');
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/login');
+      });
     });
 
     it('should not redirect if authenticated', async () => {
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
-        expect(mockNavigate).not.toHaveBeenCalled();
+        expect(searchApi.getAvailableEngines).toHaveBeenCalled();
       });
+      
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
 
   describe('Rendering and Initial State', () => {
     it('should display welcome message with username', async () => {
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByText(/welcome, testuser!/i)).toBeInTheDocument();
@@ -81,7 +96,7 @@ describe('SearchForm Component', () => {
     });
 
     it('should render logout button', async () => {
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
@@ -89,7 +104,7 @@ describe('SearchForm Component', () => {
     });
 
     it('should render search input field', async () => {
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -97,7 +112,7 @@ describe('SearchForm Component', () => {
     });
 
     it('should render search button', async () => {
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-button')).toBeInTheDocument();
@@ -105,7 +120,7 @@ describe('SearchForm Component', () => {
     });
 
     it('should have maxLength attribute on search input', async () => {
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toHaveAttribute('maxLength', '500');
@@ -113,7 +128,7 @@ describe('SearchForm Component', () => {
     });
 
     it('should display search hint', async () => {
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByText(/tip.*multiple words/i)).toBeInTheDocument();
@@ -123,7 +138,7 @@ describe('SearchForm Component', () => {
 
   describe('Loading Available Engines', () => {
     it('should load and display available search engines', async () => {
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(searchApi.getAvailableEngines).toHaveBeenCalled();
@@ -135,7 +150,7 @@ describe('SearchForm Component', () => {
     });
 
     it('should select all engines by default', async () => {
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         const googleCheckbox = screen.getByTestId('engine-google');
@@ -152,7 +167,7 @@ describe('SearchForm Component', () => {
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       (searchApi.getAvailableEngines as jest.Mock).mockRejectedValue(new Error('Failed to load'));
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByText(/failed to load available search engines/i)).toBeInTheDocument();
@@ -167,7 +182,7 @@ describe('SearchForm Component', () => {
         response: { status: 401 },
       });
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(authApi.logout).toHaveBeenCalled();
@@ -181,7 +196,7 @@ describe('SearchForm Component', () => {
   describe('Engine Selection', () => {
     it('should toggle engine selection when checkbox is clicked', async () => {
       const user = userEvent.setup({ delay: null });
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('engine-google')).toBeChecked();
@@ -198,7 +213,7 @@ describe('SearchForm Component', () => {
 
     it('should allow deselecting all engines', async () => {
       const user = userEvent.setup({ delay: null });
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('engine-google')).toBeChecked();
@@ -215,7 +230,7 @@ describe('SearchForm Component', () => {
 
     it('should allow selecting specific engines', async () => {
       const user = userEvent.setup({ delay: null });
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('engine-google')).toBeChecked();
@@ -238,7 +253,7 @@ describe('SearchForm Component', () => {
   describe('Search Input Handling', () => {
     it('should update query value on input change', async () => {
       const user = userEvent.setup({ delay: null });
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -251,7 +266,7 @@ describe('SearchForm Component', () => {
     });
 
     it('should handle empty query', async () => {
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -265,7 +280,7 @@ describe('SearchForm Component', () => {
 
     it('should handle special characters in query', async () => {
       const user = userEvent.setup({ delay: null });
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -281,7 +296,7 @@ describe('SearchForm Component', () => {
   describe('Form Validation', () => {
     it('should show error when submitting empty query', async () => {
       const user = userEvent.setup({ delay: null });
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-button')).toBeInTheDocument();
@@ -295,7 +310,7 @@ describe('SearchForm Component', () => {
 
     it('should show error when submitting with only whitespace', async () => {
       const user = userEvent.setup({ delay: null });
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -310,7 +325,7 @@ describe('SearchForm Component', () => {
 
     it('should show error when no engines are selected', async () => {
       const user = userEvent.setup({ delay: null });
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('engine-google')).toBeChecked();
@@ -339,7 +354,7 @@ describe('SearchForm Component', () => {
       };
       (searchApi.search as jest.Mock).mockResolvedValue(mockResults);
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       // Wait for engines to load
       await waitFor(() => {
@@ -355,6 +370,11 @@ describe('SearchForm Component', () => {
       await waitFor(() => {
         expect(searchApi.search).toHaveBeenCalledWith('test query', ['Google', 'Bing']);
       });
+      
+      // Wait for results to be displayed
+      await waitFor(() => {
+        expect(screen.queryByTestId('search-results-component')).toBeInTheDocument();
+      });
     });
 
     it('should display search results on successful search', async () => {
@@ -366,7 +386,7 @@ describe('SearchForm Component', () => {
       };
       (searchApi.search as jest.Mock).mockResolvedValue(mockResults);
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -396,7 +416,7 @@ describe('SearchForm Component', () => {
         .mockResolvedValueOnce(mockResults1)
         .mockResolvedValueOnce(mockResults2);
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -428,7 +448,7 @@ describe('SearchForm Component', () => {
         response: { data: { message: 'Search failed' } },
       });
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -447,7 +467,7 @@ describe('SearchForm Component', () => {
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       (searchApi.search as jest.Mock).mockRejectedValue(new Error('Network error'));
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -468,7 +488,7 @@ describe('SearchForm Component', () => {
         response: { status: 401 },
       });
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -490,7 +510,7 @@ describe('SearchForm Component', () => {
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       (searchApi.search as jest.Mock).mockRejectedValue(new Error('Search failed'));
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -518,7 +538,7 @@ describe('SearchForm Component', () => {
       });
       (searchApi.search as jest.Mock).mockReturnValue(searchPromise);
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -539,6 +559,10 @@ describe('SearchForm Component', () => {
       await waitFor(() => {
         expect(screen.queryByTestId('loading-banner')).not.toBeInTheDocument();
       });
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('search-results-component')).toBeInTheDocument();
+      });
     });
 
     it('should disable search button while loading', async () => {
@@ -549,7 +573,7 @@ describe('SearchForm Component', () => {
       });
       (searchApi.search as jest.Mock).mockReturnValue(searchPromise);
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -567,6 +591,10 @@ describe('SearchForm Component', () => {
         searchEngines: ['Google'],
         engineTotals: { Google: 1000 },
       });
+      
+      await waitFor(() => {
+        expect(searchButton).not.toBeDisabled();
+      });
     });
 
     it('should display word count in loading banner', async () => {
@@ -577,7 +605,7 @@ describe('SearchForm Component', () => {
       });
       (searchApi.search as jest.Mock).mockReturnValue(searchPromise);
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -593,6 +621,10 @@ describe('SearchForm Component', () => {
         searchEngines: ['Google'],
         engineTotals: { Google: 1000 },
       });
+      
+      await waitFor(() => {
+        expect(screen.queryByTestId('loading-banner')).not.toBeInTheDocument();
+      });
     });
 
     it('should display engine count in loading banner', async () => {
@@ -603,7 +635,7 @@ describe('SearchForm Component', () => {
       });
       (searchApi.search as jest.Mock).mockReturnValue(searchPromise);
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -619,13 +651,17 @@ describe('SearchForm Component', () => {
         searchEngines: ['Google', 'Bing', 'DuckDuckGo'],
         engineTotals: { Google: 1000, Bing: 500, DuckDuckGo: 300 },
       });
+      
+      await waitFor(() => {
+        expect(screen.queryByTestId('loading-banner')).not.toBeInTheDocument();
+      });
     });
   });
 
   describe('Logout Functionality', () => {
     it('should logout and redirect to login page when logout is clicked', async () => {
       const user = userEvent.setup({ delay: null });
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
@@ -644,7 +680,7 @@ describe('SearchForm Component', () => {
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       (searchApi.search as jest.Mock).mockRejectedValueOnce(new Error('Search failed'));
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -686,7 +722,7 @@ describe('SearchForm Component', () => {
       });
       (searchApi.search as jest.Mock).mockReturnValue(searchPromise);
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -714,6 +750,12 @@ describe('SearchForm Component', () => {
         engineTotals: { Google: 1000 },
       });
       
+      await waitFor(() => {
+        expect(screen.queryByTestId('loading-banner')).not.toBeInTheDocument();
+      });
+      
+      // Run all pending timers and switch back to real timers
+      jest.runOnlyPendingTimers();
       jest.useRealTimers();
     });
 
@@ -725,7 +767,7 @@ describe('SearchForm Component', () => {
       });
       (searchApi.search as jest.Mock).mockReturnValue(searchPromise);
       
-      renderWithRouter(<SearchForm />);
+      await renderWithRouter(<SearchForm />);
       
       await waitFor(() => {
         expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -744,6 +786,10 @@ describe('SearchForm Component', () => {
         query: 'test',
         searchEngines: ['Google'],
         engineTotals: { Google: 1000 },
+      });
+      
+      await waitFor(() => {
+        expect(screen.queryByTestId('loading-banner')).not.toBeInTheDocument();
       });
     });
   });

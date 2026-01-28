@@ -10,27 +10,34 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
   return authApi.isAuthenticated() ? children : <Navigate to="/login" />;
 };
 
+export const AppContent: React.FC = () => {
+  return (
+    <div className="App">
+      <div className="container">
+        <h1 className="title">Multi-Engine Search</h1>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route 
+            path="/search" 
+            element={
+              <ProtectedRoute>
+                <SearchForm />
+              </ProtectedRoute>
+            } 
+          />
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   return (
-    <Router>
-      <div className="App">
-        <div className="container">
-          <h1 className="title">Multi-Engine Search</h1>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route 
-              path="/search" 
-              element={
-                <ProtectedRoute>
-                  <SearchForm />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/" element={<Navigate to="/login" />} />
-          </Routes>
-        </div>
-      </div>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <AppContent />
     </Router>
   );
 };

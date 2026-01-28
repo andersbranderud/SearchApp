@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { searchApi, authApi } from '../services/api';
-import { SearchResult } from '../types/search';
+import { SearchResult } from '../types';
 import SearchResults from './SearchResults';
 import './SearchForm.css';
 

@@ -7,6 +7,11 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   backend-unit-tests:
     name: Backend Unit Tests
@@ -79,17 +84,17 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        cache-dependency-path: SearchAppClient/package-lock.json
+        cache-dependency-path: SearchAppClient/package.json
         
     - name: Install dependencies
       run: |
         cd SearchAppClient
-        npm ci
+        npm install
         
     - name: Run tests
       run: |
         cd SearchAppClient
-        npm test -- --watchAll=false --coverage --maxWorkers=2
+        npm test -- --watchAll=false --coverage --maxWorkers=2 --verbose
       env:
         CI: true
         

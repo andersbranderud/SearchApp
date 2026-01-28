@@ -1,11 +1,11 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import App from './App';
-import { authApi } from './services/api';
+import App, { AppContent } from '../App';
+import { authApi } from '../services/api';
 
 // Mock the services
-jest.mock('./services/api', () => ({
+jest.mock('../services/api', () => ({
   authApi: {
     isAuthenticated: jest.fn(),
   },
@@ -16,19 +16,19 @@ jest.mock('./services/api', () => ({
 }));
 
 // Mock the child components
-jest.mock('./components/Login', () => {
+jest.mock('../components/Login', () => {
   return function MockLogin() {
     return <div data-testid="login-component">Login Component</div>;
   };
 });
 
-jest.mock('./components/Register', () => {
+jest.mock('../components/Register', () => {
   return function MockRegister() {
     return <div data-testid="register-component">Register Component</div>;
   };
 });
 
-jest.mock('./components/SearchForm', () => {
+jest.mock('../components/SearchForm', () => {
   return function MockSearchForm() {
     return <div data-testid="search-form-component">SearchForm Component</div>;
   };
@@ -61,8 +61,8 @@ describe('App Component', () => {
 
     it('should redirect to login page when accessing root path', () => {
       render(
-        <MemoryRouter initialEntries={['/']}>
-          <App />
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/']}>
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('login-component')).toBeInTheDocument();
@@ -70,8 +70,8 @@ describe('App Component', () => {
 
     it('should render login page on /login route', () => {
       render(
-        <MemoryRouter initialEntries={['/login']}>
-          <App />
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/login']}>
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('login-component')).toBeInTheDocument();
@@ -79,8 +79,8 @@ describe('App Component', () => {
 
     it('should render register page on /register route', () => {
       render(
-        <MemoryRouter initialEntries={['/register']}>
-          <App />
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/register']}>
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('register-component')).toBeInTheDocument();
@@ -88,8 +88,8 @@ describe('App Component', () => {
 
     it('should redirect to login when accessing protected /search route', () => {
       render(
-        <MemoryRouter initialEntries={['/search']}>
-          <App />
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/search']}>
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('login-component')).toBeInTheDocument();
@@ -103,8 +103,8 @@ describe('App Component', () => {
 
     it('should render search form when authenticated and accessing /search', () => {
       render(
-        <MemoryRouter initialEntries={['/search']}>
-          <App />
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/search']}>
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('search-form-component')).toBeInTheDocument();
@@ -112,8 +112,8 @@ describe('App Component', () => {
 
     it('should still allow access to login page when authenticated', () => {
       render(
-        <MemoryRouter initialEntries={['/login']}>
-          <App />
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/login']}>
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('login-component')).toBeInTheDocument();
@@ -121,8 +121,8 @@ describe('App Component', () => {
 
     it('should still allow access to register page when authenticated', () => {
       render(
-        <MemoryRouter initialEntries={['/register']}>
-          <App />
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/register']}>
+          <AppContent />
         </MemoryRouter>
       );
       expect(screen.getByTestId('register-component')).toBeInTheDocument();
@@ -130,37 +130,46 @@ describe('App Component', () => {
   });
 
   describe('Protected Route Component', () => {
-    it('should protect routes correctly based on authentication state', () => {
-      // First test - not authenticated
+    it('should redirect to login when not authenticated accessing /search', async () => {
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(false);
-      const { rerender } = render(
-        <MemoryRouter initialEntries={['/search']}>
-          <App />
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/search']}>
+          <AppContent />
         </MemoryRouter>
       );
-      expect(screen.getByTestId('login-component')).toBeInTheDocument();
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('login-component')).toBeInTheDocument();
+      });
       expect(screen.queryByTestId('search-form-component')).not.toBeInTheDocument();
+    });
 
-      // Second test - authenticated
+    it('should allow access to /search when authenticated', async () => {
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(true);
-      rerender(
-        <MemoryRouter initialEntries={['/search']}>
-          <App />
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/search']}>
+          <AppContent />
         </MemoryRouter>
       );
-      expect(screen.getByTestId('search-form-component')).toBeInTheDocument();
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('search-form-component')).toBeInTheDocument();
+      });
     });
   });
 
   describe('Invalid Routes', () => {
-    it('should redirect to login for invalid routes when not authenticated', () => {
+    it('should redirect to login for invalid routes when not authenticated', async () => {
       (authApi.isAuthenticated as jest.Mock).mockReturnValue(false);
       render(
-        <MemoryRouter initialEntries={['/invalid-route']}>
-          <App />
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/invalid-route']}>
+          <AppContent />
         </MemoryRouter>
       );
-      expect(screen.getByTestId('login-component')).toBeInTheDocument();
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('login-component')).toBeInTheDocument();
+      });
     });
   });
 });
