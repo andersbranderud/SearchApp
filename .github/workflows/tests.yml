@@ -106,10 +106,75 @@ jobs:
         flags: frontend
         name: frontend-coverage
 
+  cypress-tests:
+    name: Cypress E2E Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: SearchAppClient/package.json
+        
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Install dependencies
+      run: |
+        cd SearchAppClient
+        npm install
+        
+    - name: Build frontend
+      run: |
+        cd SearchAppClient
+        npm run build
+        
+    - name: Start backend
+      run: |
+        cd SearchApi
+        dotnet run --no-launch-profile &
+        sleep 10
+      env:
+        ASPNETCORE_URLS: http://localhost:5000
+        
+    - name: Start frontend
+      run: |
+        cd SearchAppClient
+        npm start &
+        sleep 10
+      env:
+        PORT: 3000
+        
+    - name: Run Cypress tests
+      run: |
+        cd SearchAppClient
+        npx cypress run
+        
+    - name: Upload Cypress screenshots
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: cypress-screenshots
+        path: SearchAppClient/cypress/screenshots
+        
+    - name: Upload Cypress videos
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: cypress-videos
+        path: SearchAppClient/cypress/videos
+
   all-tests-summary:
     name: All Tests Summary
     runs-on: ubuntu-latest
-    needs: [backend-unit-tests, backend-integration-tests, frontend-tests]
+    needs: [backend-unit-tests, backend-integration-tests, frontend-tests, cypress-tests]
     if: always()
     
     steps:
@@ -117,7 +182,8 @@ jobs:
       run: |
         if [ "${{ needs.backend-unit-tests.result }}" != "success" ] || \
            [ "${{ needs.backend-integration-tests.result }}" != "success" ] || \
-           [ "${{ needs.frontend-tests.result }}" != "success" ]; then
+           [ "${{ needs.frontend-tests.result }}" != "success" ] || \
+           [ "${{ needs.cypress-tests.result }}" != "success" ]; then
           echo "❌ Some tests failed!"
           exit 1
         else
